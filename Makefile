@@ -56,7 +56,7 @@ lint: lint-steps lint-composite
 ROOTDIR?=	/usr
 
 TOOLSDIR?=	${ROOTDIR}/tools
-TOOLSBRANCH?=	master
+TOOLSBRANCH?=	v22.1
 
 .if defined(CONFIGDIR)
 _CONFIGDIR=	${CONFIGDIR}
@@ -84,18 +84,13 @@ _ARCH!=		uname -p
 ARCH?=		${_ARCH}
 ABI?=		${_CONFIGDIR:C/^.*\///}
 KERNEL?=	SMP
-ADDITIONS?=	os-dyndns
+ADDITIONS?=	os-dyndns-devel
 DEVICE?=	A10
 COMSPEED?=	115200
 COMPORT?=	0x3f8
 UEFI?=		arm dvd serial vga vm
-GITBASE?=	https://github.com/opnsense
-MIRRORS?=	https://opnsense.c0urier.net \
-		http://mirrors.nycbug.org/pub/opnsense \
-		http://mirror.wdc1.us.leaseweb.net/opnsense \
-		http://mirror.sfo12.us.leaseweb.net/opnsense \
-		http://mirror.fra10.de.leaseweb.net/opnsense \
-		http://mirror.ams1.nl.leaseweb.net/opnsense
+GITBASE?=	git@172.16.1.5:opnsense/
+MIRRORS?=	git@172.16.1.5:opnsense/
 SERVER?=	user@does.not.exist
 UPLOADDIR?=	.
 _VERSION!=	date '+%Y%m%d%H%M'
@@ -105,11 +100,11 @@ STAGEDIRPREFIX?=/usr/obj
 EXTRABRANCH?=	# empty
 
 
-COREBRANCH?=	stable/${ABI}
+COREBRANCH?=	stable/21.7
 COREDIR?=	${ROOTDIR}/core
 COREENV?=	CORE_PHP=${PHP} CORE_ABI=${ABI} CORE_PYTHON=${PYTHON}
 
-PLUGINSBRANCH?=	stable/${ABI}
+PLUGINSBRANCH?=	stable/21.7
 PLUGINSDIR?=	${ROOTDIR}/plugins
 PLUGINSENV?=	PLUGIN_PHP=${PHP} PLUGIN_ABI=${ABI} PLUGIN_PYTHON=${PYTHON}
 
@@ -121,7 +116,7 @@ PORTSREFURL?=	https://git.FreeBSD.org/ports.git
 PORTSREFDIR?=	${ROOTDIR}/freebsd-ports
 PORTSREFBRANCH?=main
 
-SRCBRANCH?=	stable/${ABI}
+SRCBRANCH?=	stable/22.1
 SRCDIR?=	${ROOTDIR}/src
 
 # A couple of meta-targets for easy use and ordering:

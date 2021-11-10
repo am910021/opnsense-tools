@@ -28,6 +28,13 @@ by setting ROOTDIR.  For example:
     # cd tools
     # env ROOTDIR=/tmp/opnsense make update
 
+Create signing key:
+
+    # openssl genrsa -out /usr/tools/config/22.1/repo.key 2048
+    # chmod 0400 /usr/tools/config/22.1/repo.key
+    # openssl rsa -in /usr/tools/config/22.1/repo.key -out /usr/tools/config/22.1/repo.pub -pubout
+
+
 TL;DR
 =====
 
@@ -177,7 +184,7 @@ The final image is built using:
 
     # make arm-<size> DEVICE=BANANAPI
 
-Currently available device are: BANANAPI and RPI2.
+Currently available device are: BANANAPI, RPI2, RPI3 and RPI4.
 
 About other scripts and tweaks
 ==============================
@@ -201,6 +208,47 @@ These hooks are available for all image types, namely
 dvd, nano, serial, vga and vm.  Device-specific hooks
 are loaded after config-specific hooks and both of them
 can coexist in a given build.
+
+    arm_custom_fstab_setting()
+    {
+        cat << EOF
+        
+        # Device        Mountpoint  FStype  Options     Dump    Pass#
+        /dev/mmcsd0s1   /boot/efi   msdosfs rw,noatime  0 0
+        /dev/mmcsd0s2a  /       ufs rw,noatime      1 1
+        md      /tmp        mfs rw,noatime,-s50m    0 0
+        md      /var/log    mfs rw,noatime,-s15m    0 0
+        md      /var/tmp    mfs rw,noatime,-s12m    0 0
+        
+        EOF
+    }
+
+These function is write custom configure to fstab file.
+
+    create_custom_image(){
+    
+        ARMSIZE=${1}
+        ARMIMG=${2}
+    
+        truncate -s ${ARMSIZE} ${ARMIMG}
+    
+        DEV=$(mdconfig -a -t vnode -f ${ARMIMG} -x 63 -y 255)
+    
+        gpart create -s MBR ${DEV}
+        gpart add -a 63 -b 63 -s 50m -t fat32lba ${DEV} 
+        gpart set -a active -i 1 ${DEV}
+        gpart add -t freebsd -a 512k  ${DEV}
+        gpart create -s BSD ${DEV}s2
+        gpart add -t freebsd-ufs -a 64k ${DEV}s2
+    
+        newfs_msdos -L BOOT -F 16 /dev/${DEV}s1 >/dev/null
+        newfs /dev/${DEV}s2a
+        mount_msdosfs -l /dev/${DEV}s1 ${STAGEDIR}/boot/msdos
+        mount /dev/${DEV}s2a ${STAGEDIR}
+        echo ${DEV}
+    }
+
+These function is create custom partition to image file.
 
 Updating the code repositories
 ------------------------------

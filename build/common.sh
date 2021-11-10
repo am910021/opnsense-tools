@@ -251,7 +251,7 @@ fi
 . ${DEVICEDIR}/${PRODUCT_DEVICE_REAL}.conf
 
 # reload the kernel according to device specifications
-export PRODUCT_KERNEL="${PRODUCT_KERNEL}${PRODUCT_DEVICE+"-${PRODUCT_DEVICE}"}"
+export PRODUCT_KERNEL="${PRODUCT_KERNEL}"
 
 # define and bootstrap target directories
 export STAGEDIR="${STAGEDIRPREFIX}${CONFIGDIR}/${PRODUCT_FLAVOUR}:${PRODUCT_ARCH}"
@@ -672,7 +672,7 @@ generate_set()
 
 generate_signature()
 {
-	if [ -n "$(${PRODUCT_SIGNCHK})" ]; then
+	if [ -n "${PRODUCT_SIGNCHK}" ]; then
 		echo -n ">>> Creating ${PRODUCT_SETTINGS} signature for $(basename ${1})... "
 		sha256 -q ${1} | ${PRODUCT_SIGNCMD} > ${1}.sig
 		echo "done"
@@ -996,7 +996,7 @@ bundle_packages()
 
 	SIGNARGS=
 
-	if [ -n "$(${PRODUCT_SIGNCHK})" ]; then
+	if [ -n "${PRODUCT_SIGNCHK}" ]; then
 		SIGNARGS="signing_command: ${PRODUCT_SIGNCMD}"
 	fi
 

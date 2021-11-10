@@ -52,21 +52,39 @@ sh ./clean.sh ${SELF}
 
 setup_stage ${STAGEDIR}
 
-truncate -s ${ARMSIZE} ${ARMIMG}
+DEV=""
+create_standard_image(){
+    #create image file
+    truncate -s ${ARMSIZE} ${ARMIMG}
 
-DEV=$(mdconfig -a -t vnode -f ${ARMIMG} -x 63 -y 255)
+    #mount image file to /dev
+    DEV=$(mdconfig -a -t vnode -f ${ARMIMG} -x 63 -y 255)
 
-ARM_FAT_SIZE=${ARM_FAT_SIZE:-"50m -b 1m"}
+    ARM_FAT_SIZE=${ARM_FAT_SIZE:-"50m -b 1m"}
 
-gpart create -s MBR ${DEV}
-gpart add -t '!12' -a 512k -s ${ARM_FAT_SIZE} ${DEV}
-gpart set -a active -i 1 ${DEV}
-newfs_msdos -L msdosboot -F 16 /dev/${DEV}s1
-gpart add -t freebsd ${DEV}
-gpart create -s bsd ${DEV}s2
-gpart add -t freebsd-ufs -a 64k /dev/${DEV}s2
-newfs -U -L ${ARMLABEL} /dev/${DEV}s2a
-mount /dev/${DEV}s2a ${STAGEDIR}
+    gpart create -s MBR ${DEV}
+    gpart add -a 63 -b 63 -s 50m -t fat32lba ${DEV}
+    gpart set -a active -i 1 ${DEV}
+    gpart add -t freebsd -a 512k  ${DEV}
+    gpart create -s BSD ${DEV}s2
+    gpart add -t freebsd-ufs -a 64k ${DEV}s2
+
+    newfs_msdos -L BOOT -F 16 /dev/${DEV}s1 > /dev/null
+    newfs -U -L ${ARMLABEL} /dev/${DEV}s2a
+    mount /dev/${DEV}s2a ${STAGEDIR}
+}
+
+set +e
+FUN_EXISTS=`type create_custom_image`
+case "${FUN_EXISTS}" in
+    *shell*)
+        DEV=$(create_custom_image ${ARMSIZE} ${ARMIMG})
+        ;;
+    *)
+        create_standard_image
+        ;;
+esac
+set -e
 
 setup_base ${STAGEDIR}
 setup_kernel ${STAGEDIR}
@@ -76,43 +94,65 @@ setup_extras ${STAGEDIR} ${SELF}
 setup_entropy ${STAGEDIR}
 setup_xbase ${STAGEDIR}
 
-cat > ${STAGEDIR}/etc/fstab << EOF
-# Device		Mountpoint	FStype	Options		Dump	Pass#
-/dev/ufs/${ARMLABEL}	/		ufs	rw		1	1
-/dev/msdosfs/MSDOSBOOT	/boot/msdos	msdosfs	rw,noatime	0	0
+
+arm_standar_fstab_setting(){
+cat << EOF
+# Device        Mountpoint  FStype  Options     Dump    Pass#
+/dev/ufs/${ARMLABEL}    /       ufs rw      1   1
+/dev/msdosfs/MSDOSBOOT  /boot/msdos msdosfs rw,noatime  0   0
 EOF
+}
+
+set +e
+FUN_EXISTS=`type arm_custom_fstab_setting`
+case "${FUN_EXISTS}" in
+    *shell*)
+        arm_custom_fstab_setting > ${STAGEDIR}/etc/fstab
+        ;;
+    *)
+        arm_standar_fstab_setting > ${STAGEDIR}/etc/fstab
+        ;;
+esac
+set -e
 
 mkdir -p ${STAGEDIR}/boot/msdos
-mount_msdosfs /dev/${DEV}s1 ${STAGEDIR}/boot/msdos
+mount_msdosfs -l /dev/${DEV}s1 ${STAGEDIR}/boot/msdos
 
 arm_mount()
 {
-	mount /dev/${DEV}s2a ${STAGEDIR}
-	mount_msdosfs /dev/${DEV}s1 ${STAGEDIR}/boot/msdos
+    mount /dev/${DEV}s2a ${STAGEDIR}
+    mount_msdosfs -l /dev/${DEV}s1 ${STAGEDIR}/boot/msdos
 }
 
 arm_unmount()
 {
-	sync
-	umount ${STAGEDIR}/boot/msdos
-	umount ${STAGEDIR}
+    sync
+    umount ${STAGEDIR}/boot/msdos
+    umount ${STAGEDIR}
 }
 
 arm_install_efi()
 {
-	DEV_EFI=$(mdconfig -a -t vnode -f ${STAGEDIR}/boot/boot1.efifat)
-	mount_msdosfs /dev/${DEV_EFI} ${STAGEDIR}/mnt
-	cp -r ${STAGEDIR}/mnt/efi ${STAGEDIR}/boot/msdos/efi
-	umount ${STAGEDIR}/mnt
-	mdconfig -d -u ${DEV_EFI}
+    setup_efiboot ${STAGEDIR}/efiboot.img ${STAGEDIR}/boot/loader.efi
+
+    DEV_EFI=$(mdconfig -a -t vnode -f ${STAGEDIR}/efiboot.img)
+    mount_msdosfs /dev/${DEV_EFI} ${STAGEDIR}/mnt
+    cp -r ${STAGEDIR}/mnt/efi ${STAGEDIR}/boot/msdos/efi
+    umount ${STAGEDIR}/mnt
+    mdconfig -d -u ${DEV_EFI}
+    echo -n ">>> installing efi..."
 }
 
 echo -n ">>> Building arm image... "
 
 arm_install_uboot
 
-if [ -n "${PRODUCT_UEFI}" -z "${PRODUCT_UEFI%%*"${SELF}"*}" ]; then
-	arm_install_efi
+if [ -n "${PRODUCT_UEFI}" ]; then
+    case "${PRODUCT_UEFI}" in
+    *${SELF}*)
+            arm_install_efi
+     ;;
+    esac
 fi
 
 arm_unmount
