@@ -1058,7 +1058,6 @@ setup_packages()
 
 	# remove package repository
 	#rm -rf ${1}${PACKAGESDIR}
-	umount ${1}${PACKAGESDIR}
 
 	# stop blocking start of configd
 	rm ${1}/etc/rc.conf.local
@@ -1172,6 +1171,7 @@ ${SRCDIR}
 ${PORTSDIR}
 ${COREDIR}
 ${PLUGINSDIR}
+${PACKAGESDIR}
 /
 "
 	STAGE=${1}
