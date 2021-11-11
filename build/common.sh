@@ -776,8 +776,15 @@ extract_packages()
 
 	BASEDIR=${1}
 
-	rm -rf ${BASEDIR}${PACKAGESDIR}/All
-	mkdir -p ${BASEDIR}${PACKAGESDIR}/All
+	#rm -rf ${BASEDIR}${PACKAGESDIR}/All
+	#mkdir -p ${BASEDIR}${PACKAGESDIR}/All
+
+	mkdir -p ${TOOLSDIR}/tmp/${PRODUCT_TARGET}:${PRODUCT_ARCH}/${PACKAGESDIR}/All
+	mkdir -p ${BASEDIR}${PACKAGESDIR}
+
+	#mount_unionfs -o below ${BASEDIR}${PACKAGESDIR} ${TOOLSDIR}/tmp/${PRODUCT_TARGET}:${PRODUCT_ARCH}/${PACKAGESDIR}
+	mount_nullfs ${BASEDIR}${PACKAGESDIR} ${TOOLSDIR}/tmp/${PRODUCT_TARGET}:${PRODUCT_ARCH}/${PACKAGESDIR}
+
 
 	PACKAGESET=$(find_set packages)
 
@@ -1050,7 +1057,7 @@ setup_packages()
 	install_packages ${@} ${PRODUCT_ADDITIONS} ${PRODUCT_CORE}
 
 	# remove package repository
-	rm -rf ${1}${PACKAGESDIR}
+	#rm -rf ${1}${PACKAGESDIR}
 
 	# stop blocking start of configd
 	rm ${1}/etc/rc.conf.local
