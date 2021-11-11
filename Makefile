@@ -56,7 +56,7 @@ lint: lint-steps lint-composite
 ROOTDIR?=	/usr
 
 TOOLSDIR?=	${ROOTDIR}/tools
-TOOLSBRANCH?=	v22.1
+TOOLSBRANCH?=	v22.1-public
 
 .if defined(CONFIGDIR)
 _CONFIGDIR=	${CONFIGDIR}
@@ -89,8 +89,13 @@ DEVICE?=	A10
 COMSPEED?=	115200
 COMPORT?=	0x3f8
 UEFI?=		arm dvd serial vga vm
-GITBASE?=	git@172.16.1.5:opnsense/
-MIRRORS?=	git@172.16.1.5:opnsense/
+GITBASE?=	https://github.com/opnsense
+MIRRORS?=	https://opnsense.c0urier.net \
+		http://mirrors.nycbug.org/pub/opnsense \
+		http://mirror.wdc1.us.leaseweb.net/opnsense \
+		http://mirror.sfo12.us.leaseweb.net/opnsense \
+		http://mirror.fra10.de.leaseweb.net/opnsense \
+		http://mirror.ams1.nl.leaseweb.net/opnsense
 SERVER?=	user@does.not.exist
 UPLOADDIR?=	.
 _VERSION!=	date '+%Y%m%d%H%M'
