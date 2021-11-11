@@ -782,7 +782,7 @@ extract_packages()
 	mkdir -p ${TOOLSDIR}/tmp/${PRODUCT_TARGET}:${PRODUCT_ARCH}/${PACKAGESDIR}/All
 	mkdir -p ${BASEDIR}${PACKAGESDIR}
 
-	#mount_unionfs -o below ${BASEDIR}${PACKAGESDIR} ${TOOLSDIR}/tmp/${PRODUCT_TARGET}:${PRODUCT_ARCH}/${PACKAGESDIR}
+	#mount_unionfs -o below ${TOOLSDIR}/tmp/${PRODUCT_TARGET}:${PRODUCT_ARCH}/${PACKAGESDIR} ${BASEDIR}${PACKAGESDIR}
 	mount_nullfs ${TOOLSDIR}/tmp/${PRODUCT_TARGET}:${PRODUCT_ARCH}/${PACKAGESDIR} ${BASEDIR}${PACKAGESDIR}
 
 
@@ -1058,6 +1058,7 @@ setup_packages()
 
 	# remove package repository
 	#rm -rf ${1}${PACKAGESDIR}
+	umount ${1}${PACKAGESDIR}
 
 	# stop blocking start of configd
 	rm ${1}/etc/rc.conf.local
