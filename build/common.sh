@@ -783,7 +783,7 @@ extract_packages()
 	mkdir -p ${BASEDIR}${PACKAGESDIR}
 
 	#mount_unionfs -o below ${BASEDIR}${PACKAGESDIR} ${TOOLSDIR}/tmp/${PRODUCT_TARGET}:${PRODUCT_ARCH}/${PACKAGESDIR}
-	mount_nullfs ${BASEDIR}${PACKAGESDIR} ${TOOLSDIR}/tmp/${PRODUCT_TARGET}:${PRODUCT_ARCH}/${PACKAGESDIR}
+	mount_nullfs ${TOOLSDIR}/tmp/${PRODUCT_TARGET}:${PRODUCT_ARCH}/${PACKAGESDIR} ${BASEDIR}${PACKAGESDIR}
 
 
 	PACKAGESET=$(find_set packages)
